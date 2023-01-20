@@ -13,6 +13,7 @@
     "@react-three/fiber": "^8.8.6",
     "@react-three/postprocessing": "^2.6.2",
     "babel-plugin-glsl": "^1.0.0",
+    "gsap": "^3.11.4",
     "leva": "^0.9.34",
     "maath": "^0.4.2",
     "react": "^18.2.0",

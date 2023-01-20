@@ -1,9 +1,8 @@
 import * as THREE from "three"
-import { useMemo, useState, useRef } from "react"
+import { useMemo, useState, useRef, useEffect } from "react"
 import { createPortal, useFrame } from "@react-three/fiber"
-import { useFBO, OrbitControls, Billboard, Plane, Dodecahedron } from "@react-three/drei"
+import { useFBO, OrbitControls, Billboard, Plane, Dodecahedron, useGLTF } from "@react-three/drei"
 import "./assets/shaders/simulationMaterial"
-import "./assets/shaders/dofPointsMaterial"
 import "./assets/shaders/basicRenderMaterial"
 import { useControls } from "leva"
 
@@ -13,8 +12,10 @@ export function Particles({ size = 512, ...props }) {
   // Set up FBO
   const [scene] = useState(() => new THREE.Scene())
   const [camera] = useState(() => new THREE.OrthographicCamera(-1, 1, 1, -1, 1 / Math.pow(2, 53), 1))
-  const [positions] = useState(() => new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, 1, 0, -1, 1, 0]))
-  const [uvs] = useState(() => new Float32Array([0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0]))
+  const [positions, setPositions] = useState(
+    () => new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, 1, 0, -1, 1, 0])
+  )
+  const [uvs, setUvs] = useState(() => new Float32Array([0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0]))
   const target = useFBO(size, size, {
     minFilter: THREE.NearestFilter,
     magFilter: THREE.NearestFilter,
@@ -43,6 +44,28 @@ export function Particles({ size = 512, ...props }) {
     renderRef.current.uniforms.uTime.value = state.clock.elapsedTime
     simRef.current.uniforms.uTime.value = state.clock.elapsedTime
   })
+
+  const { nodes } = useGLTF("/horse.glb")
+
+  useEffect(() => {
+    // nodes.horse_statue_01.geometry.scale(10, 10, 10)
+    // const facePos = nodes.horse_statue_01.geometry.attributes.position.array
+    // const faceNumber = facePos.length / 3
+    // const size = Math.floor(Math.sqrt(faceNumber))
+    // const rgbaArray = new Float32Array(size * size * 4)
+    // for (let i = 0; i < size * size; i++) {
+    //   let i3 = i * 3
+    //   let i4 = i * 4
+    //   rgbaArray[i4 + 0] = facePos[i3 + 0]
+    //   rgbaArray[i4 + 1] = facePos[i3 + 1]
+    //   rgbaArray[i4 + 2] = facePos[i3 + 2]
+    //   rgbaArray[i4 + 3] = 1
+    // }
+    // const positions = new THREE.DataTexture(rgbaArray, size, size, THREE.RGBAFormat, THREE.FloatType)
+    // positions.needsUpdate = true
+    // simRef.current.uniforms.positions.value = positions
+  }, [nodes])
+
   return (
     <>
       {/* Simulation goes into a FBO/Off-buffer */}
@@ -56,6 +79,11 @@ export function Particles({ size = 512, ...props }) {
         </mesh>,
         scene
       )}
+      {/* <group dispose={null}>
+        <mesh geometry={nodes.horse_statue_01.geometry}>
+          <meshNormalMaterial />
+        </mesh>
+      </group> */}
       {/* <Billboard>
         <Plane>
           <simulationMaterial />

@@ -166,9 +166,9 @@ vec3 curl(float	x,	float	y,	float	z)
         vec3 tar = pos + curl( pos.x * curlFreq, pos.y * curlFreq, pos.z * curlFreq ) * amplitude;
 
         float d = length( pos-tar ) / maxDistance;
-        pos = mix( pos, tar, pow( d, 5. ) );
+        vec3 curlPos = mix( pos, tar, pow( d, 5. ) );
 
-        gl_FragColor = vec4( pos, 1. );
+        gl_FragColor = vec4( curlPos, 1. );
       }`,
       uniforms: {
         positions: { value: positionsTexture },
