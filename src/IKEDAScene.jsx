@@ -91,7 +91,13 @@ const Screen = (props) => {
   return (
     <>
       <Box {...props} ref={ref}>
-        <screenShaderMaterial ratio={ratio} ref={matRef} key={ScreenShaderMaterial.key} toneMapped={true} />
+        <screenShaderMaterial
+          time={Math.random() * 100}
+          ratio={ratio}
+          ref={matRef}
+          key={ScreenShaderMaterial.key}
+          toneMapped={true}
+        />
       </Box>
       <Box {...props} scale-y={0.125} ref={bgRef}>
         <meshBasicMaterial color='black' />
@@ -195,7 +201,7 @@ const screenMargin = 0.2
 const randomStr = 0.2
 const randomRotStr = Math.PI / 14
 
-const instanceCount = 4
+const instanceCount = 6
 
 const getScreenPositions = () => {
   const args = []
@@ -240,7 +246,7 @@ const IKEDAScene = () => {
       <Screens />
       {/* <spotLight position={[10, 20, 10]} angle={0.12} penumbra={1} intensity={0.2} castShadow shadow-mapSize={1024} /> */}
       <hemisphereLight intensity={0.35} groundColor='black' />
-      <ScreenGameOfLife />
+      {/* <ScreenGameOfLife /> */}
       <Floor />
     </>
   )

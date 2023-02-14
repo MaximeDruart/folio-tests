@@ -71,13 +71,11 @@ float snoise(vec3 v) {
 }
 
 vec3 snoiseVec3(vec3 x) {
-
     float s = snoise(vec3(x));
     float s1 = snoise(vec3(x.y - 19.1, x.z + 33.4, x.x + 47.2));
     float s2 = snoise(vec3(x.z + 74.2, x.x - 124.5, x.y + 99.4));
     vec3 c = vec3(s, s1, s2);
     return c;
-
 }
 
 vec3 curlNoise(vec3 p) {
