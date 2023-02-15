@@ -13,6 +13,7 @@ function App() {
   return (
     <>
       <Canvas dpr={[1, 2]}>
+        <color attach='background' args={["red"]} />
         {/* <EffectComposer>
           <DepthOfField focusDistance={0} focalLength={0.05} bokehScale={2} height={480} />
           <Bloom luminanceThreshold={0} luminanceSmoothing={0.9} intensity={0.22} height={300} />

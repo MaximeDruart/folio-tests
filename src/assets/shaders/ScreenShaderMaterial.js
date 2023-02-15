@@ -3,6 +3,8 @@ import { extend } from "@react-three/fiber"
 import fbmDots from "../glsl/fbmDots.glsl?raw"
 import lines from "../glsl/lines.glsl?raw"
 import marchingSquares from "../glsl/marchingSquares.glsl?raw"
+import shit from "../glsl/shit.glsl?raw"
+import glitch2 from "../glsl/glitch2.glsl?raw"
 
 const ScreenShaderMaterial = shaderMaterial(
   {
@@ -14,7 +16,7 @@ const ScreenShaderMaterial = shaderMaterial(
       vUv = uv;
       gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
     }`,
-  marchingSquares
+  shit
 )
 
 extend({ ScreenShaderMaterial })

@@ -201,7 +201,7 @@ const screenMargin = 0.2
 const randomStr = 0.2
 const randomRotStr = Math.PI / 14
 
-const instanceCount = 2
+const instanceCount = 1
 
 const getScreenPositions = () => {
   const args = []
