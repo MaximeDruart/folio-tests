@@ -201,7 +201,7 @@ const screenMargin = 0.2
 const randomStr = 0.2
 const randomRotStr = Math.PI / 14
 
-const instanceCount = 6
+const instanceCount = 2
 
 const getScreenPositions = () => {
   const args = []
@@ -247,7 +247,7 @@ const IKEDAScene = () => {
       {/* <spotLight position={[10, 20, 10]} angle={0.12} penumbra={1} intensity={0.2} castShadow shadow-mapSize={1024} /> */}
       <hemisphereLight intensity={0.35} groundColor='black' />
       {/* <ScreenGameOfLife /> */}
-      <Floor />
+      {/* <Floor /> */}
     </>
   )
 }
