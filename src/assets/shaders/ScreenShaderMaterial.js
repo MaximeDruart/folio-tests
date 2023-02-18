@@ -6,6 +6,8 @@ import marchingSquares from "../glsl/marchingSquares.glsl?raw"
 import shit from "../glsl/shit.glsl?raw"
 import glitch2 from "../glsl/glitch2.glsl?raw"
 
+const shaders = [fbmDots, lines, marchingSquares, shit, glitch2]
+
 const ScreenShaderMaterial = shaderMaterial(
   {
     time: 0,
@@ -16,7 +18,7 @@ const ScreenShaderMaterial = shaderMaterial(
       vUv = uv;
       gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
     }`,
-  shit
+  shaders[0]
 )
 
 extend({ ScreenShaderMaterial })

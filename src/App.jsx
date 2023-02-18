@@ -12,14 +12,14 @@ import { EffectComposer, DepthOfField, Bloom, Noise, Vignette } from "@react-thr
 function App() {
   return (
     <>
-      <Canvas dpr={[1, 2]}>
-        <color attach='background' args={["red"]} />
-        {/* <EffectComposer>
-          <DepthOfField focusDistance={0} focalLength={0.05} bokehScale={2} height={480} />
-          <Bloom luminanceThreshold={0} luminanceSmoothing={0.9} intensity={0.22} height={300} />
-          <Noise opacity={0.02} />
+      <Canvas camera={{ position: [0, 1, 8], fov: 90 }} style={{ position: "absolute" }} dpr={[1, 2]}>
+        {/* <color attach='background' args={["red"]} /> */}
+        <EffectComposer>
+          <DepthOfField focusDistance={0} focalLength={0.01} bokehScale={2} height={480} />
+          <Bloom luminanceThreshold={0} luminanceSmoothing={0.9} intensity={0.12} height={300} />
+          <Noise opacity={0.08} />
           <Vignette eskil={false} offset={0.1} darkness={0.2} />
-        </EffectComposer> */}
+        </EffectComposer>
         <Switch>
           <Route path='/'>
             <Projects />
@@ -32,9 +32,9 @@ function App() {
           </Route>
         </Switch>
       </Canvas>
-      {/* <Route path='/fonts'>
+      <Route path='/fonts'>
         <Fonts />
-      </Route> */}
+      </Route>
     </>
   )
 }
