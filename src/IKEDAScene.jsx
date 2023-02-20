@@ -1,10 +1,15 @@
-import { Box, OrbitControls, Plane, MeshReflectorMaterial, useTexture, useFBO } from "@react-three/drei"
-import { useFrame, createPortal } from "@react-three/fiber"
+import { Box, Grid, Plane, MeshReflectorMaterial, useTexture, useFBO } from "@react-three/drei"
+import { Bloom, DepthOfField, EffectComposer, Noise, Pixelation, Vignette } from "@react-three/postprocessing"
+
+import { useFrame, createPortal, useThree } from "@react-three/fiber"
 import { useState, useRef, useEffect } from "react"
 import * as THREE from "three"
 import { ScreenShaderMaterial } from "./assets/shaders/ScreenShaderMaterial"
 import { GameOfLifeMaterialScreen, GameOfLifeMaterialBuffer } from "./assets/shaders/GameOfLifeMaterial"
 import { createDataTexture } from "./assets/utils/createDataTexture"
+import { randInt } from "three/src/math/MathUtils"
+import lerp from "@14islands/lerp"
+import gsap from "gsap"
 
 const ScreenGameOfLife = (props) => {
   const ref = useRef()
@@ -98,25 +103,33 @@ export function Floor(props) {
     alphaMap: "/textures/alpha3.png",
   })
 
+  const meshRef = useRef()
+
   Object.keys(maps).forEach((key) => {
     maps[key].wrapS = THREE.RepeatWrapping
     maps[key].wrapT = THREE.RepeatWrapping
-    maps[key].repeat.set(9, 1).multiplyScalar(0.7)
+    maps[key].repeat.set(12, 1).multiplyScalar(0.7)
+  })
+
+  useFrame(({ camera }, delta) => {
+    if (camera.position.z + 1 < meshRef.current.position.z - 50) {
+      meshRef.current.position.z -= 50
+    }
   })
 
   return (
     <>
       {/* <mesh rotation={[-Math.PI / 2, 0, Math.PI / 2]} position-y={-0.2}>
-        <planeGeometry args={[90, 10, 20, 10]} />
-        <meshStandardMaterial {...maps} transparent opacity={0.6} />
+        <planeGeometry args={[120, 10, 20, 10]} />
+        <meshStandardMaterial {...maps} transparent opacity={0.2} />
       </mesh> */}
-      <mesh rotation={[-Math.PI / 2, 0, Math.PI / 2]} position-y={-0.001}>
-        <planeGeometry args={[90, 10]} />
+      <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, Math.PI / 2]} position-y={-0.001}>
+        <planeGeometry args={[120, 10]} />
         <MeshReflectorMaterial
           blur={[300, 30]}
           resolution={2048}
           mixBlur={1}
-          mixStrength={80}
+          mixStrength={260}
           roughness={1}
           depthScale={1.2}
           minDepthThreshold={0.4}
@@ -136,8 +149,16 @@ const Screen = (props) => {
 
   const isFaulty = useRef(Math.random() > 0.7)
 
-  useFrame((state, delta) => {
+  const [status, setStatus] = useState(randInt(0, 0))
+
+  useFrame(({ camera }, delta) => {
     matRef.current.time += delta
+
+    // if camera's position on z axis - screen's position on z axis is greater than 2 then move the screen forward
+    if (camera.position.z + 1 < ref.current.position.z) {
+      ref.current.position.z += props.totalLength
+      bgRef.current.position.z += props.totalLength
+    }
   })
 
   useEffect(() => {
@@ -166,14 +187,27 @@ const Screen = (props) => {
     bgRef.current.translateZ(-translation)
   }, [])
 
+  const [hovered, setHovered] = useState(false)
+
   const ratio = props.scale[0] / props.scale[1]
+
+  useEffect(() => {
+    document.body.style.cursor = hovered ? "pointer" : "auto"
+  }, [hovered])
 
   return (
     <>
-      <Plane {...props} ref={ref}>
+      <Plane
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        onClick={() => setStatus((status) => (status + 1) % 3)}
+        {...props}
+        ref={ref}
+      >
         <screenShaderMaterial
           time={Math.random() * 100}
           ratio={ratio}
+          status={status}
           ref={matRef}
           key={ScreenShaderMaterial.key}
           toneMapped={true}
@@ -186,18 +220,14 @@ const Screen = (props) => {
   )
 }
 
-const screenMat = new THREE.MeshBasicMaterial({ color: "white" })
-// const screenMat = new THREE.MeshStandardMaterial({ emissive: "white" })
-const screenGeo = new THREE.BoxGeometry(1, 1, 1)
-
 function rangeRandom(min, max) {
   return Math.random() * (max - min) + min
 }
 
 const screenSize = [2.5, 0.01, 1.75]
-const screenMargin = 0.2
+const screenMargin = 0.1
 const randomStr = 0.2
-const randomRotStr = Math.PI / 14
+const randomRotStr = Math.PI / 16
 
 const instanceCount = 20
 
@@ -231,21 +261,75 @@ const Screens = () => {
   return (
     <group ref={ref}>
       {positions.map((props, index) => (
-        <Screen key={index} {...props} />
+        <Screen
+          totalLength={-positions.reduce((acc, { scale }) => acc + scale[0] / 2, 0) + screenMargin}
+          key={index}
+          {...props}
+        />
       ))}
     </group>
   )
 }
 
 const IKEDAScene = () => {
+  const { camera } = useThree()
+
+  const isClicking = useRef(false)
+
+  useFrame(({ gl, camera, mouse, events }, delta) => {
+    camera.position.z -= delta * 1
+    camera.rotation.y = lerp(camera.rotation.y, mouse.x * Math.PI * 0.08, 0.1, delta)
+
+    // const newFov = lerp(camera.fov, isClicking.current ? 60 : 90, 0.1, delta)
+    // if (newFov !== camera.fov) {
+    //   camera.fov = newFov
+    //   camera.updateProjectionMatrix()
+    // }
+  })
+
+  useEffect(() => {
+    // setup event listener for mouse down and up change isCLicking ref
+    document.addEventListener("mousedown", () => (isClicking.current = true))
+    document.addEventListener("mouseup", () => (isClicking.current = false))
+
+    // cleanup
+    return () => {
+      document.removeEventListener("mousedown", () => (isClicking.current = true))
+      document.removeEventListener("mouseup", () => (isClicking.current = false))
+    }
+  }, [])
+
+  useEffect(() => {
+    gsap.to(camera, {
+      fov: 90,
+      zoom: 1,
+      duration: 2,
+      ease: "power4.easeInOut",
+      onUpdate: () => {
+        camera.updateProjectionMatrix()
+      },
+    })
+
+    // gsap.to(camera, )
+  }, [])
+
   return (
     <>
-      <OrbitControls makeDefault />
+      <fog attach='fog' color='#000000' near={1} far={20} />
+      {/* <CameraControls ref={cameraRef} makeDefault /> */}
       <Screens />
       {/* <spotLight position={[10, 20, 10]} angle={0.12} penumbra={1} intensity={0.2} castShadow shadow-mapSize={1024} /> */}
       <hemisphereLight intensity={0.35} groundColor='black' />
       {/* <ScreenGameOfLife /> */}
       <Floor />
+
+      <EffectComposer>
+        {/* <Pixelation granularity={2} /> */}
+        <DepthOfField focusDistance={0} focalLength={0.01} bokehScale={2} height={480} />
+        <Bloom mipmapBlur luminanceThreshold={0} luminanceSmoothing={0.9} intensity={0.12} height={300} />
+        <Noise opacity={0.08} />
+        <Vignette eskil={false} offset={0.1} darkness={0.2} />
+      </EffectComposer>
     </>
   )
 }

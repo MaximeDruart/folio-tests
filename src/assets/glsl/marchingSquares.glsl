@@ -92,9 +92,22 @@ float fbm(in vec3 st) {
 
 // Square marching starts here
 
+float compensedCircle(ivec2 pS, vec2 position, float radius, float time) {
+    vec2 p = vec2(float(pS.x) - 5., float(pS.y) + 2.5);
+    // draw a circle with given position and uv
+    float circle = length(p * 0.03 + 0.8 + vec2(0.5, 0.5) - position) - (radius + time * 0.02);
+
+    // create multiple other circles moving over time
+    return circle;
+}
+
 bool random_bool(ivec2 p) {
     //return simplex3d(vec3(p,0.))>0.;
-    return fbm(vec3(vec2(p) * .05, time * 0.3)) > 0.;
+    // return fbm(vec3(vec2(p) * .05, time * 0.3)) > 0.;
+    float circle = compensedCircle(p, vec2(0.5), 0.03, time);
+
+    return circle > 0.;
+
 }
 
 int combine(bool b3, bool b2, bool b1, bool b0) {

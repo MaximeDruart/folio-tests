@@ -1,26 +1,42 @@
 import { shaderMaterial } from "@react-three/drei"
 import { extend } from "@react-three/fiber"
-import fbmDots from "../glsl/fbmDots.glsl?raw"
-import lines from "../glsl/lines.glsl?raw"
-import marchingSquares from "../glsl/marchingSquares.glsl?raw"
-import shit from "../glsl/shit.glsl?raw"
-import glitch2 from "../glsl/glitch2.glsl?raw"
+import { UniformsLib } from "three"
 
-const shaders = [fbmDots, lines, marchingSquares, shit, glitch2]
+import frag from "../glsl/screenShader.glsl?raw"
+
+const uniforms = {}
+Object.entries(UniformsLib.fog).forEach(([key, { value }]) => {
+  uniforms[key] = value
+})
 
 const ScreenShaderMaterial = shaderMaterial(
   {
     time: 0,
     ratio: 1,
+    fog: true,
+    status: 0,
+    ...uniforms,
   },
-  ` varying vec2 vUv;
+  ` 
+
+  #include <fog_pars_vertex>
+  varying vec2 vUv;
     void main() {
+      #include <begin_vertex>
+      #include <project_vertex>
+
       vUv = uv;
       gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-    }`,
-  shaders[0]
+
+      #include <fog_vertex>
+    }
+
+    `,
+  frag
 )
 
-extend({ ScreenShaderMaterial })
+extend({
+  ScreenShaderMaterial,
+})
 
 export { ScreenShaderMaterial }
