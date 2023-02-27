@@ -1,4 +1,4 @@
-import { Box, Grid, Plane, MeshReflectorMaterial, useTexture, useFBO } from "@react-three/drei"
+import { Box, CameraControls, Plane, MeshReflectorMaterial, useTexture, useFBO, Text } from "@react-three/drei"
 import { Bloom, DepthOfField, EffectComposer, Noise, Pixelation, Vignette } from "@react-three/postprocessing"
 
 import { useFrame, createPortal, useThree } from "@react-three/fiber"
@@ -10,6 +10,9 @@ import { createDataTexture } from "./assets/utils/createDataTexture"
 import { randInt } from "three/src/math/MathUtils"
 import lerp from "@14islands/lerp"
 import gsap from "gsap"
+
+import font from "./assets/fonts/searchsystempromonoreg-webfont.woff"
+import font2 from "./assets/fonts/bahnschrift-bold.ttf"
 
 const ScreenGameOfLife = (props) => {
   const ref = useRef()
@@ -146,6 +149,7 @@ const Screen = (props) => {
   const ref = useRef()
   const bgRef = useRef()
   const matRef = useRef()
+  const textRef = useRef()
 
   const isFaulty = useRef(Math.random() > 0.7)
 
@@ -153,6 +157,7 @@ const Screen = (props) => {
 
   useFrame(({ camera }, delta) => {
     matRef.current.time += delta
+    matRef.current.mouse = mousePos.current
 
     // if camera's position on z axis - screen's position on z axis is greater than 2 then move the screen forward
     if (camera.position.z + 1 < ref.current.position.z) {
@@ -185,6 +190,7 @@ const Screen = (props) => {
   useEffect(() => {
     const translation = boxScaleZ / 2 + 0.001
     bgRef.current.translateZ(-translation)
+    // textRef.current.translateZ(0.101)
   }, [])
 
   const [hovered, setHovered] = useState(false)
@@ -195,15 +201,54 @@ const Screen = (props) => {
     document.body.style.cursor = hovered ? "pointer" : "auto"
   }, [hovered])
 
+  const mousePos = useRef({ x: 0, y: 0 })
+
   return (
     <>
       <Plane
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+        onPointerMove={(e) => {
+          setHovered(true)
+          mousePos.current = e.uv
+        }}
+        onPointerOut={() => {
+          setHovered(false)
+          mousePos.current = { x: -5, y: -5 }
+        }}
         onClick={() => setStatus((status) => (status + 1) % 3)}
         {...props}
         ref={ref}
       >
+        <Text
+          ref={textRef}
+          // letterSpacing={-0.15}
+          color='black'
+          fontSize='0.07'
+          anchorX={"left"}
+          position={[-0.47, 0.47, 0]}
+          maxWidth={1}
+          anchorY='top'
+          font={font2}
+          outlineWidth={0.002}
+          rotation={[0, Math.abs(props.rotation[1]) - Math.PI / 2, 0]}
+        >
+          {"PROJECT TITLE".toUpperCase()}
+          Project body
+        </Text>
+        <Text
+          ref={textRef}
+          // letterSpacing={-0.15}
+          color='black'
+          fontSize='0.07'
+          anchorX={"left"}
+          position={[-0.47, 0.27, 0]}
+          maxWidth={1}
+          anchorY='top'
+          font={font}
+          outlineWidth={0.002}
+          rotation={[0, Math.abs(props.rotation[1]) - Math.PI / 2, 0]}
+        >
+          hey &#x2190
+        </Text>
         <screenShaderMaterial
           time={Math.random() * 100}
           ratio={ratio}
@@ -277,9 +322,8 @@ const IKEDAScene = () => {
   const isClicking = useRef(false)
 
   useFrame(({ gl, camera, mouse, events }, delta) => {
-    camera.position.z -= delta * 1
-    camera.rotation.y = lerp(camera.rotation.y, mouse.x * Math.PI * 0.08, 0.1, delta)
-
+    // camera.position.z -= delta * 1
+    // camera.rotation.y = lerp(camera.rotation.y, mouse.x * Math.PI * 0.08, 0.1, delta)
     // const newFov = lerp(camera.fov, isClicking.current ? 60 : 90, 0.1, delta)
     // if (newFov !== camera.fov) {
     //   camera.fov = newFov
@@ -315,8 +359,8 @@ const IKEDAScene = () => {
 
   return (
     <>
-      <fog attach='fog' color='#000000' near={1} far={20} />
-      {/* <CameraControls ref={cameraRef} makeDefault /> */}
+      {/* <fog attach='fog' color='#000000' near={1} far={20} /> */}
+      <CameraControls makeDefault />
       <Screens />
       {/* <spotLight position={[10, 20, 10]} angle={0.12} penumbra={1} intensity={0.2} castShadow shadow-mapSize={1024} /> */}
       <hemisphereLight intensity={0.35} groundColor='black' />
@@ -325,10 +369,10 @@ const IKEDAScene = () => {
 
       <EffectComposer>
         {/* <Pixelation granularity={2} /> */}
-        <DepthOfField focusDistance={0} focalLength={0.01} bokehScale={2} height={480} />
+        {/* <DepthOfField focusDistance={0} focalLength={0.01} bokehScale={2} height={480} />
         <Bloom mipmapBlur luminanceThreshold={0} luminanceSmoothing={0.9} intensity={0.12} height={300} />
         <Noise opacity={0.08} />
-        <Vignette eskil={false} offset={0.1} darkness={0.2} />
+        <Vignette eskil={false} offset={0.1} darkness={0.2} /> */}
       </EffectComposer>
     </>
   )

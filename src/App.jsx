@@ -10,11 +10,12 @@ function App() {
   return (
     <>
       <Canvas
-        camera={{ position: [0, 0.4, 4], fov: 120, zoom: 0.5, far: 50 }}
+        // camera={{ position: [0, 0.4, 4], fov: 120, zoom: 0.5, far: 50 }}
+        camera={{ position: [0, 0.4, 4], fov: 90, far: 50 }}
         style={{ position: "absolute" }}
         dpr={[1, 2]}
       >
-        {/* <color attach='background' args={["red"]} /> */}
+        <color attach='background' args={["red"]} />
 
         <Switch>
           <Route path='/'>

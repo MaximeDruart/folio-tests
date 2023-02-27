@@ -3,7 +3,6 @@
 varying vec2 vUv;
 uniform float time;
 uniform float ratio;
-uniform int status;
 uniform vec2 mouse;
 
 vec4 permute(vec4 x) {
@@ -120,70 +119,36 @@ void main() {
     vec2 p = vUv;
     p.y /= ratio;
 
-        // MOUSE INTERACTION STUFF (DISTORTING UVS)
-
-    float incTimeMouse = floor(time * 20.) / 20.;
-
-    float centerX = 1. - distance(p, vec2(0.5, 0.5)) * 0.02;
-
-    float smallRand = 0.02 * snoise(vec3(p.x, 0., time)) * floor((p.x * 1.) / 0.01);
-
-    smallRand += centerX;
-
-    float ran = random(smallRand + floor(time * 100.2));
-
-    float mouseRange = (1. - smoothstep(0.01 + 0.12 * snoise(vec3(p.y, p.x, time)), 0.52 + 0.22 * snoise(vec3(p, time)), distance(mouse, p))) * 0.5;
-
-    p.y += smallRand * ran * 0.05 * mouseRange * step(0.5, sin(incTimeMouse));
-    p.x += smallRand * ran * 0.05 * mouseRange * (1. - step(0.5, sin(incTimeMouse)));
-
-    vec2 newUv = p;
-    newUv *= 80.0;
-    vec2 fpos = fract(newUv);  // get the fractional part
-    vec2 ipos = floor(newUv);  // get the integer coords
-
+    // make time jump by increments
     float incTime = floor(time * 8.) / 8.;
     incTime = incTime * 2.;
 
-    // FBM DOTS COLOR
+    //p.x += (random(p.y + time) * smallRand) * mouseCircle;
+
+    //uv.y += movingUvX*0.1;
+
+    vec2 newUv = p;
+    newUv *= 200.0;
+    vec2 fpos = fract(newUv);  // get the fractional part
+    vec2 ipos = floor(newUv);  // get the integer coords
 
     float noise = fbm(vec3(ipos * .05, incTime));
+      // float noise2 = snoise(vec3(ipos*.045, 10000. + time*2.));
+
+      // noise = step(0.27, noise);
+      // noise2 = step(0.47, noise2);
+
+      // noise = mix(noise, noise2, sin(time*.1) * 0.5 + 0.5);
+      // noise = noise * noise2 + max(noise, noise2) * 0.5;
+
     noise = step(0.1, noise);
 
-    float colorDots = circle(fpos, 0.5);
-    colorDots = colorDots * noise;
+    vec3 color = vec3(circle(fpos, 0.5));
+    color = color * noise;
 
-    // WHITE COLOR
+    gl_FragColor = vec4(color, 1.0);
 
-    float incTime2 = floor(time * 16.) / 16.;
-    incTime2 = incTime2 * 2.;
-
-    float noiseWhite = 1. - snoise(vec3(ipos, incTime2));
-    noiseWhite = step(0.07, noiseWhite);
-
-    float noiseWhite2 = random(vec2(sin(time * 100.) * 0.01));
-    noiseWhite2 = step(0.001, noiseWhite2);
-
-    float colorWhite = noiseWhite * noiseWhite2;
-
-    // COLOR BLACK
-    float colorBlack = 0.;
-
-    float movingUvX = vUv.x + time * 0.2;
-
-    float noiseB = fbm(vec3(movingUvX, vUv.y * 130., time * .3));
-    //noise *= 2.2;
-
-    float stepDelta = (sin(time) + 1. / 2.) * 0.08;
-    noiseB = smoothstep(0.5 + stepDelta, 0.52 + stepDelta, noiseB);
-
-    colorBlack = noiseB;
-
-    // MIX
-
-    float color = mix(colorDots, colorWhite, status == 0 ? 1.0 : 0.0);
-    color = mix(color, colorBlack, status >= 2 ? 1.0 : 0.0);
-    gl_FragColor = vec4(vec3(color), 1.0);
+    // gl_FragColor = vec4(vec3(mouseRange), 1.0);
 
     #include <fog_fragment>
 }
