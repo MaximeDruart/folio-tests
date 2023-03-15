@@ -115,12 +115,78 @@ float fbm(in vec3 st) {
     return value;
 }
 
+float sdOrientedBox(in vec2 p, in vec2 a, in vec2 b, float th) {
+    float l = length(b - a);
+    vec2 d = (b - a) / l;
+    vec2 q = p - (a + b) * 0.5;
+    q = mat2(d.x, -d.y, d.y, d.x) * q;
+    q = abs(q) - vec2(l * 0.5, th);
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
+}
+
+float sdCross(in vec2 p, float th, float crossRadius) {
+
+    float upper = 1. - crossRadius;
+    float lower = 0. + crossRadius;
+
+    vec2 v1 = vec2(lower, upper);
+    vec2 v12 = vec2(upper, lower);
+    vec2 v2 = vec2(lower, lower);
+    vec2 v22 = vec2(upper, upper);
+
+    float d1 = sdOrientedBox(p, v1, v12, th);
+    float d2 = sdOrientedBox(p, v2, v22, th);
+
+    d1 = step(d1, 0.01);
+    d2 = step(d2, 0.01);
+
+    return d1 + d2;
+}
+
+float square(in vec2 p, float radius) {
+    float x = step(radius, p.x) - step(1. - radius, p.x);
+    float y = step(radius, p.y) - step(1. - radius, p.y);
+    return x * y;
+}
+
+float line(in vec2 p, float radius) {
+    float upper = 1. - radius;
+    float lower = 0. + radius;
+
+    vec2 v1 = vec2(lower, lower);
+    vec2 v12 = vec2(upper, upper);
+
+    return step(sdOrientedBox(p, v1, v12, 0.028), 0.01);
+}
+
+float getGridColor(in vec2 p, float n) {
+    if(n <= 0.25) {
+        return square(p, 0.47) - 0.7;
+    }
+
+    if(n > 0.25 && n <= 0.5) {
+        return line(p, 0.68);
+    }
+
+    if(n > 0.5 && n <= 0.75) {
+        return sdCross(p, 0.028, 0.68);
+    }
+
+    if(n > 0.75) {
+        return square(p, 0.94);
+    }
+
+}
+
 void main() {
 
     vec2 p = vUv;
     p.y /= ratio;
 
-        // MOUSE INTERACTION STUFF (DISTORTING UVS)
+    vec2 p2 = vUv;
+    p2.y /= ratio;
+
+    // MOUSE INTERACTION STUFF (DISTORTING UVS)
 
     float incTimeMouse = floor(time * 20.) / 20.;
 
@@ -132,10 +198,10 @@ void main() {
 
     float ran = random(smallRand + floor(time * 100.2));
 
-    float mouseRange = (1. - smoothstep(0.01 + 0.12 * snoise(vec3(p.y, p.x, time)), 0.52 + 0.22 * snoise(vec3(p, time)), distance(mouse, p))) * 0.5;
+    float mouseRange = (1. - smoothstep(0.05 + 0.08 * snoise(vec3(p.y, p.x, time)), 0.32 + 0.12 * snoise(vec3(p, time)), distance(mouse, p))) * 0.5;
 
-    p.y += smallRand * ran * 0.05 * mouseRange * step(0.5, sin(incTimeMouse));
-    p.x += smallRand * ran * 0.05 * mouseRange * (1. - step(0.5, sin(incTimeMouse)));
+    p.y += smallRand * ran * 0.35 * mouseRange * step(0.5, sin(incTimeMouse));
+    p.x += smallRand * ran * 0.35 * mouseRange * (1. - step(0.5, sin(incTimeMouse)));
 
     vec2 newUv = p;
     newUv *= 80.0;
@@ -179,11 +245,31 @@ void main() {
 
     colorBlack = noiseB;
 
+    // COLOR GRID
+
+    float gridSize = 20.;
+    float gridSizeInverse = 1. / gridSize;
+
+    vec2 uv1 = p2 * gridSize;
+
+    vec2 uv_i = floor(uv1);
+    vec2 uv_f = fract(uv1);
+
+    float gridNoise = snoise(vec3(uv_i * gridSizeInverse * 2., time * 0.6));
+    gridNoise *= 1.2;
+
+    //gridNoise *= 1.4 + sin(time * 3.) * 0.3;
+    gridNoise += 0.1;
+
+    float colorGrid = getGridColor(uv_f, gridNoise);
+
     // MIX
 
     float color = mix(colorDots, colorWhite, status == 0 ? 1.0 : 0.0);
-    color = mix(color, colorBlack, status >= 2 ? 1.0 : 0.0);
+    color = mix(color, colorGrid, status >= 2 ? 1.0 : 0.0);
     gl_FragColor = vec4(vec3(color), 1.0);
+
+    //gl_FragColor = vec4(vec3(colorGrid), 1.);
 
     #include <fog_fragment>
 }
